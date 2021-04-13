@@ -12,9 +12,12 @@ api.use(logger('dev'));
 api.use(bodyParser.json());
 api.use(bodyParser.urlencoded({ extended: false }));
 
-const serialNumber = "VMRDS"
+const NUMBER_OF_DATA_TO_SEND = 100
+const SLEEP_INTERVAL = 2000
+
 const man = "NIWC"
 const model = "NGB Mounted RN Sensor"
+const serialNumber = "VMRDS"
 
 const statuses = ["STATUS_GREEN", "STATUS_YELLOW", "STATUS_RED"]
 const messages = ['super green', 'mildly out of sorts', 'AAAAACKK!']
@@ -42,9 +45,9 @@ const pairs = {
 let id = `manufacturer=${man}&model=${model}&serialNumber=${serialNumber}&`
 
 async function go() {
-let counter = 0
-while(counter < 100) {
-        let num = counter % 3
+    let counter = 0
+    while(counter < NUMBER_OF_DATA_TO_SEND) {
+        let num = counter % statuses.length
         let queryParams = Object.entries(pairs)
             .reduce((curr, [key, value]) => {
                 if(typeof value === 'string') {
@@ -53,15 +56,14 @@ while(counter < 100) {
                 return curr.concat(`&${key}=${value[num]}`)
             }, "")
 
-        await sleep(1000)
-        console.log("in then " + counter)
-            
-            let url = `http://localhost:8080/sensor?${id}${queryParams}`;
-            console.log(url)
-            axios.get(url);
-            counter ++
+        await sleep(SLEEP_INTERVAL)
+
+        let url = `http://localhost:8080/sensor?${id}${queryParams}`;
+        console.log(url)
+        axios.get(url)
         
-        }
+        counter ++
+    }
 }
 
 function sleep(ms) {
