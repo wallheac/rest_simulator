@@ -12,7 +12,9 @@ api.use(logger('dev'));
 api.use(bodyParser.json());
 api.use(bodyParser.urlencoded({ extended: false }));
 
+//this will determine how many times the script hits the /sensor endpoint
 const NUMBER_OF_DATA_TO_SEND = 100
+//this will determine the interval between http requests
 const SLEEP_INTERVAL = 2000
 
 const man = "NIWC"
@@ -20,7 +22,7 @@ const model = "NGB Mounted RN Sensor"
 const serialNumber = "VMRDS"
 
 const statuses = ["STATUS_GREEN", "STATUS_YELLOW", "STATUS_RED"]
-const messages = ['super green', 'mildly out of sorts', 'AAAAACKK!']
+const messages = ['', 'mildly out of sorts', 'AAAAACKK!']
 
 const pairs = {
     "neutron_health_status" : statuses,
@@ -39,26 +41,34 @@ const pairs = {
     "fl_serialNumber" : "234",
     "fr_serialNumber" : "345",
     "rl_serialNumber" : "456",
-    "rr_serialNumber" : "567"
+    "rr_serialNumber" : "567",
+    "isotopes": "2",
+    "isotopes_0_name": "Isotope One",
+    "isotopes_1_name": "Isotope Two",
+    "isotopes_0_confIndication": "67",
+    "isotopes_1_confIndication": "92",
 }
 
-let id = `manufacturer=${man}&model=${model}&serialNumber=${serialNumber}&`
+const id = `manufacturer=${man}&model=${model}&serialNumber=${serialNumber}&`
 
 async function go() {
     let counter = 0
     while(counter < NUMBER_OF_DATA_TO_SEND) {
-        let num = counter % statuses.length
-        let queryParams = Object.entries(pairs)
+        const num = counter % statuses.length
+        const queryParams = Object.entries(pairs)
             .reduce((curr, [key, value]) => {
+                //if value is a string, add string to query params
                 if(typeof value === 'string') {
                     return curr.concat(`&${key}=${value}`)
                 }
+                //if the value is an array, add a (rotating) value
                 return curr.concat(`&${key}=${value[num]}`)
             }, "")
 
         await sleep(SLEEP_INTERVAL)
 
-        let url = `http://localhost:8080/sensor?${id}${queryParams}`;
+        const url = `http://localhost:8080/sensor?${id}${queryParams}`
+        //for debugging purposes - this logs the URL out to the console
         console.log(url)
         axios.get(url)
         
